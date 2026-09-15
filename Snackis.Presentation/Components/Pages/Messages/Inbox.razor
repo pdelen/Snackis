@@ -1,0 +1,139 @@
+@page "/messages"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using Snackis.Application.Interfaces
+@using Snackis.Domain.Entities
+@using Snackis.Infrastructure.Identity
+
+@inject IPrivateMessageService MessageService
+@inject IUserLookupService UserLookupService
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Meddelanden</PageTitle>
+
+<h1>Privata meddelanden</h1>
+
+<EditForm Model="_newConversation" OnSubmit="StartConversation" FormName="StartConversation" class="row g-2 align-items-end mb-4">
+    <DataAnnotationsValidator />
+    <div class="col-auto">
+        <label class="form-label">Nytt meddelande till (visningsnamn)</label>
+        <InputText @bind-Value="_newConversation.RecipientDisplayName" class="form-control" placeholder="Visningsnamn" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Skriv meddelande</button>
+    </div>
+    <ValidationSummary />
+</EditForm>
+
+@if (_errorMessage is not null)
+{
+    <p class="text-danger">@_errorMessage</p>
+}
+
+@if (_inbox is null)
+{
+    <p>Laddar...</p>
+}
+else if (_inbox.Count == 0)
+{
+    <p>Inga meddelanden ännu.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var item in _inbox)
+        {
+            <li class="list-group-item">
+                <a href="messages/@item.PartnerId">
+                    <strong>@item.PartnerDisplayName</strong>
+                    <span class="text-muted small ms-2">@item.LastMessage.SentAt.ToDisplayString()</span>
+                </a>
+                <p class="mb-0 text-truncate">@item.LastMessage.Content</p>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private List<InboxItem>? _inbox;
+    private NewConversationModel _newConversation = new();
+    private string? _errorMessage;
+    private string? _currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask is null)
+        {
+            return;
+        }
+
+        var authState = await AuthStateTask;
+        _currentUserId = UserManager.GetUserId(authState.User);
+        await LoadInbox();
+    }
+
+    private async Task LoadInbox()
+    {
+        if (_currentUserId is null)
+        {
+            return;
+        }
+
+        var messages = await MessageService.GetInboxAsync(_currentUserId);
+        var partnerIds = messages.Select(m => m.SenderId == _currentUserId ? m.RecipientId : m.SenderId);
+        var partners = await UserLookupService.GetUserSummariesAsync(partnerIds);
+
+        _inbox = messages.Select(message =>
+        {
+            var partnerId = message.SenderId == _currentUserId ? message.RecipientId : message.SenderId;
+            var displayName = partners.TryGetValue(partnerId, out var summary) ? summary.DisplayName : "Okänd användare";
+            return new InboxItem(partnerId, displayName, message);
+        }).ToList();
+    }
+
+    private async Task StartConversation(EditContext editContext)
+    {
+        _errorMessage = null;
+
+        if (!editContext.Validate())
+        {
+            return;
+        }
+
+        var recipientId = await UserLookupService.FindUserIdByDisplayNameAsync(_newConversation.RecipientDisplayName);
+        if (recipientId is null)
+        {
+            _errorMessage = "Hittade ingen användare med det visningsnamnet.";
+            return;
+        }
+
+        NavigationManager.NavigateTo($"messages/{recipientId}");
+    }
+
+    private class InboxItem
+    {
+        public InboxItem(string partnerId, string partnerDisplayName, PrivateMessage lastMessage)
+        {
+            PartnerId = partnerId;
+            PartnerDisplayName = partnerDisplayName;
+            LastMessage = lastMessage;
+        }
+
+        public string PartnerId { get; }
+        public string PartnerDisplayName { get; }
+        public PrivateMessage LastMessage { get; }
+    }
+
+    private class NewConversationModel
+    {
+        [Required(ErrorMessage = "Visningsnamn är obligatoriskt")]
+        public string RecipientDisplayName { get; set; } = "";
+    }
+}

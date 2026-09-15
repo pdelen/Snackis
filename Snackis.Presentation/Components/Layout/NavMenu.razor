@@ -1,0 +1,61 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Snackis</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Forum
+            </NavLink>
+        </div>
+
+        <AuthorizeView Roles="Admin">
+            <div class="nav-item px-3">
+                <span class="nav-link">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Admin
+                </span>
+            </div>
+            <div class="nav-item px-3 ms-3">
+                <NavLink class="nav-link" href="admin/categories">Kategorier</NavLink>
+            </div>
+            <div class="nav-item px-3 ms-3">
+                <NavLink class="nav-link" href="admin/reports">Anmälningar</NavLink>
+            </div>
+            <div class="nav-item px-3 ms-3">
+                <NavLink class="nav-link" href="admin/roles">Roller</NavLink>
+            </div>
+        </AuthorizeView>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="messages">Meddelanden</NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Profile">Inloggad som @context.User.Identity?.Name</NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <form action="Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="/" />
+                        <button type="submit" class="nav-link btn btn-link">Logga ut</button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Register">Registrera</NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Login">Logga in</NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </nav>
+</div>
+

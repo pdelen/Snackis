@@ -1,0 +1,6 @@
+@Snackis.API_HostAddress = http://localhost:5196
+
+GET {{Snackis.API_HostAddress}}/api/categories/1/posts
+Accept: application/json
+
+###

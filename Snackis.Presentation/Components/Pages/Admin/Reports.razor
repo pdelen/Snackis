@@ -1,0 +1,83 @@
+@page "/admin/reports"
+@attribute [Authorize(Roles = "Admin")]
+@rendermode InteractiveServer
+
+@using Snackis.Application.Interfaces
+@using Snackis.Domain.Entities
+
+@inject IPostReportService ReportService
+@inject IUserLookupService UserLookupService
+
+<PageTitle>Admin - Anmälningar</PageTitle>
+
+<h1>Anmälda inlägg</h1>
+
+@if (_reports is null)
+{
+    <p>Laddar...</p>
+}
+else if (_reports.Count == 0)
+{
+    <p>Inga öppna anmälningar.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Inlägg</th>
+                <th>Anmäld av</th>
+                <th>Anledning</th>
+                <th>Datum</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var report in _reports)
+            {
+                <tr>
+                    <td>
+                        <a href="post/@report.Post.Id">@report.Post.Content</a>
+                    </td>
+                    <td>@GetDisplayName(report.ReportedByUserId)</td>
+                    <td>@report.Reason</td>
+                    <td>@report.CreatedAt.ToDisplayString()</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => MarkReviewed(report.Id)">Markera granskad</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeletePost(report.Id)">Ta bort inlägg</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<PostReport>? _reports;
+    private Dictionary<string, UserSummary> _reporters = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReports();
+    }
+
+    private async Task LoadReports()
+    {
+        _reports = await ReportService.GetOpenReportsAsync();
+        _reporters = await UserLookupService.GetUserSummariesAsync(_reports.Select(r => r.ReportedByUserId));
+    }
+
+    private string GetDisplayName(string userId) => _reporters.TryGetValue(userId, out var summary) ? summary.DisplayName : "Okänd användare";
+
+    private async Task MarkReviewed(int reportId)
+    {
+        await ReportService.MarkReviewedAsync(reportId);
+        await LoadReports();
+    }
+
+    private async Task DeletePost(int reportId)
+    {
+        await ReportService.DeleteReportedPostAsync(reportId);
+        await LoadReports();
+    }
+}

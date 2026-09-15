@@ -1,0 +1,134 @@
+@page "/category/{CategoryId:int}"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Snackis.Application.Interfaces
+@using Snackis.Domain.Entities
+@using Snackis.Infrastructure.Identity
+@using Snackis.Presentation.Extensions
+@using Snackis.Presentation.Models
+
+@inject IForumCategoryService CategoryService
+@inject IForumPostService PostService
+@inject IHttpClientFactory HttpClientFactory
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>@(_category?.Name ?? "Kategori")</PageTitle>
+
+@if (_category is null)
+{
+    <p>Laddar...</p>
+}
+else
+{
+    <p><a href="">&laquo; Alla kategorier</a></p>
+    <h1>@_category.Name</h1>
+
+    @if (_category.SubCategories.Count > 0)
+    {
+        <ul class="list-group mb-4">
+            @foreach (var sub in _category.SubCategories)
+            {
+                <li class="list-group-item">
+                    <a href="category/@sub.Id">@sub.Name</a>
+                </li>
+            }
+        </ul>
+    }
+
+    <AuthorizeView Context="authorizeContext">
+        <Authorized>
+            <EditForm Model="_newPost" OnSubmit="CreatePost" FormName="CreatePost" class="mb-4">
+                <DataAnnotationsValidator />
+                <div class="mb-2">
+                    <textarea class="form-control" rows="3" placeholder="Skriv ett nytt inlägg..." @bind="_newPost.Content"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Publicera inlägg</button>
+                <ValidationSummary />
+            </EditForm>
+        </Authorized>
+        <NotAuthorized>
+            <p><a href="Account/Login">Logga in</a> för att skriva ett inlägg.</p>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    @if (_posts is null || _posts.Count == 0)
+    {
+        <p>Inga inlägg ännu i den här kategorin.</p>
+    }
+    else
+    {  
+        <ul class="list-group">
+            @foreach (var post in _posts.OrderByDescending(p => p.CreatedAt))
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="post/@post.Id">@Truncate(post.Content)</a>
+                        <div class="text-muted small">@post.AuthorDisplayName &middot; @post.CreatedAt.ToDisplayString()</div>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    [Parameter]
+    public int CategoryId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private ForumCategory? _category;
+    private List<PostApiDto>? _posts;
+    private NewPostModel _newPost = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategory();
+    }
+
+    private async Task LoadCategory()
+    {
+        _category = await CategoryService.GetCategoryAsync(CategoryId);
+        _newPost = new NewPostModel();
+
+        var client = HttpClientFactory.CreateClient("SnackisApi");
+        _posts = await client.GetFromJsonAsync<List<PostApiDto>>($"api/categories/{CategoryId}/posts");
+    }
+
+    private static string Truncate(string content) => content.Length > 80 ? content[..80] + "..." : content;
+
+    private async Task CreatePost(EditContext editContext)
+    {
+        if (!editContext.Validate())
+        {
+            return;
+        }
+
+        var authState = await AuthStateTask!;
+        var userId = UserManager.GetUserId(authState.User);
+        if (userId is null)
+        {
+            return;
+        }
+
+        await PostService.CreatePostAsync(new ForumPost
+        {
+            ForumCategoryId = CategoryId,
+            AuthorId = userId,
+            Content = _newPost.Content
+        });
+
+        await LoadCategory();
+    }
+
+    private class NewPostModel
+    {
+        [Required(ErrorMessage = "Inlägget kan inte vara tomt")]
+        public string Content { get; set; } = "";
+    }
+}

@@ -1,0 +1,128 @@
+@page "/admin/roles"
+@attribute [Authorize(Roles = "Admin")]
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using Snackis.Infrastructure.Identity
+
+@inject RoleManager<IdentityRole> RoleManager
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Admin - Roller</PageTitle>
+
+<h1>Roller</h1>
+<p>Skapa roller och styr vilka användare som har dem. "Admin" ger tillgång till adminsidorna.</p>
+
+<EditForm Model="_newRole" OnSubmit="CreateRole" FormName="CreateRole" class="row g-2 align-items-end mb-4">
+    <DataAnnotationsValidator />
+    <div class="col-auto">
+        <label class="form-label">Ny roll</label>
+        <InputText @bind-Value="_newRole.Name" class="form-control" placeholder="Rollnamn" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Skapa roll</button>
+    </div>
+    <ValidationSummary />
+</EditForm>
+
+@if (_roles is null || _users is null)
+{
+    <p>Laddar...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Användare</th>
+                <th>Roller</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in _users)
+            {
+                <tr>
+                    <td>@user.DisplayName <span class="text-muted">(@user.Email)</span></td>
+                    <td>
+                        @foreach (var role in _roles)
+                        {
+                            var isInRole = _userRoles.TryGetValue(user.Id, out var assignedRoles) && assignedRoles.Contains(role.Name!);
+                            if (isInRole)
+                            {
+                                <button class="btn btn-sm btn-outline-danger me-1 mb-1" @onclick="() => RemoveFromRole(user.Id, role.Name!)">@role.Name &times;</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-outline-secondary me-1 mb-1" @onclick="() => AddToRole(user.Id, role.Name!)">+ @role.Name</button>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<IdentityRole>? _roles;
+    private List<ApplicationUser>? _users;
+    private Dictionary<string, List<string>> _userRoles = new();
+    private NewRoleModel _newRole = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _roles = await RoleManager.Roles.ToListAsync();
+        _users = await UserManager.Users.ToListAsync();
+
+        _userRoles.Clear();
+        foreach (var user in _users)
+        {
+            _userRoles[user.Id] = (await UserManager.GetRolesAsync(user)).ToList();
+        }
+    }
+
+    private async Task CreateRole(EditContext editContext)
+    {
+        if (!editContext.Validate() || await RoleManager.RoleExistsAsync(_newRole.Name))
+        {
+            return;
+        }
+
+        await RoleManager.CreateAsync(new IdentityRole(_newRole.Name));
+        _newRole = new NewRoleModel();
+        await LoadData();
+    }
+
+    private async Task AddToRole(string userId, string roleName)
+    {
+        var user = await UserManager.FindByIdAsync(userId);
+        if (user is not null)
+        {
+            await UserManager.AddToRoleAsync(user, roleName);
+            await LoadData();
+        }
+    }
+
+    private async Task RemoveFromRole(string userId, string roleName)
+    {
+        var user = await UserManager.FindByIdAsync(userId);
+        if (user is not null)
+        {
+            await UserManager.RemoveFromRoleAsync(user, roleName);
+            await LoadData();
+        }
+    }
+
+    private class NewRoleModel
+    {
+        [Required(ErrorMessage = "Rollnamn är obligatoriskt")]
+        public string Name { get; set; } = "";
+    }
+}

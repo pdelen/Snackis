@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Snackis.API/Snackis.API.csproj" />
+  <Project Path="Snackis.Application/Snackis.Application.csproj" />
+  <Project Path="Snackis.Domain/Snackis.Domain.csproj" />
+  <Project Path="Snackis.Infrastructure/Snackis.Infrastructure.csproj" />
+  <Project Path="Snackis.Presentation/Snackis.Presentation.csproj" />
+</Solution>

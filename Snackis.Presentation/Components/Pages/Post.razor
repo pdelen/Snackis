@@ -1,0 +1,200 @@
+@page "/post/{PostId:int}"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using Snackis.Application.Interfaces
+@using Snackis.Domain.Entities
+@using Snackis.Infrastructure.Identity
+@using Snackis.Presentation.Extensions
+
+@inject IForumPostService PostService
+@inject IForumCommentService CommentService
+@inject IPostReportService ReportService
+@inject IUserLookupService UserLookupService
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(_post is null ? "Inlägg" : "Inlägg av " + GetDisplayName(_post.AuthorId))</PageTitle>
+
+@if (_post is null)
+{
+    <p>Laddar...</p>
+}
+else
+{
+    <p><a href="category/@_post.ForumCategoryId">&laquo; @_post.Category.Name</a></p>
+
+    <div class="card post-card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    @if (!string.IsNullOrEmpty(GetProfileImageUrl(_post.AuthorId)))
+                    {
+                        <img src="@GetProfileImageUrl(_post.AuthorId)" alt="Profilbild" class="author-avatar" />
+                    }
+                    <strong>@GetDisplayName(_post.AuthorId)</strong>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small">@_post.CreatedAt.ToDisplayString()</span>
+                    <AuthorizeView Roles="Admin">
+                        <button class="btn btn-sm btn-outline-danger" @onclick="DeletePost">Ta bort inlägg</button>
+                    </AuthorizeView>
+                </div>
+            </div>
+            <p class="mt-2">@_post.Content</p>
+
+            <AuthorizeView>
+                <Authorized>
+                    @if (_reported)
+                    {
+                        <p class="text-success small mt-2 mb-0">Inlägget har anmälts, tack.</p>
+                    }
+                    else if (_reporting)
+                    {
+                        <div class="input-group mt-2">
+                            <input class="form-control" placeholder="Anledning till anmälan..." @bind="_reportReason" />
+                            <button class="btn btn-outline-danger" @onclick="SubmitReport">Skicka anmälan</button>
+                            <button class="btn btn-outline-secondary" @onclick="() => _reporting = false">Avbryt</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <button class="btn btn-link btn-sm text-danger p-0 mt-2" @onclick="() => _reporting = true">Anmäl inlägg</button>
+                    }
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+
+    <h5>Kommentarer</h5>
+
+    <AuthorizeView Context="authorizeContext">
+        <Authorized>
+            <div class="input-group mb-3">
+                <input class="form-control" placeholder="Skriv en kommentar..." @bind="_newCommentText" />
+                <button class="btn btn-outline-primary" @onclick="CreateComment">Kommentera</button>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <p><a href="Account/Login">Logga in</a> för att kommentera.</p>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    @if (_comments.Count == 0)
+    {
+        <p>Inga kommentarer ännu.</p>
+    }
+    else
+    {
+        <div class="comment-list">
+            @foreach (var comment in _comments)
+            {
+                <div class="comment-item">
+                    <strong>@GetDisplayName(comment.AuthorId)</strong>
+                    <span class="text-muted small">@comment.CreatedAt.ToDisplayString()</span>
+                    <p class="mb-1">@comment.Content</p>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int PostId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private ForumPost? _post;
+    private List<ForumComment> _comments = new();
+    private Dictionary<string, UserSummary> _authors = new();
+    private string _newCommentText = "";
+    private bool _reporting;
+    private bool _reported;
+    private string _reportReason = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPost();
+    }
+
+    private async Task LoadPost()
+    {
+        _post = await PostService.GetPostAsync(PostId);
+        _comments = await CommentService.GetCommentsForPostAsync(PostId);
+
+        var authorIds = _comments.Select(c => c.AuthorId).Append(_post.AuthorId);
+        _authors = await UserLookupService.GetUserSummariesAsync(authorIds);
+    }
+
+    private string GetDisplayName(string userId) => _authors.TryGetValue(userId, out var summary) ? summary.DisplayName : "Okänd användare";
+
+    private string? GetProfileImageUrl(string userId) => _authors.TryGetValue(userId, out var summary) ? summary.ProfileImageUrl : null;
+
+    private async Task<string?> GetCurrentUserIdAsync()
+    {
+        if (AuthStateTask is null)
+        {
+            return null;
+        }
+
+        var authState = await AuthStateTask;
+        return UserManager.GetUserId(authState.User);
+    }
+
+    private async Task CreateComment()
+    {
+        if (string.IsNullOrWhiteSpace(_newCommentText))
+        {
+            return;
+        }
+
+        var userId = await GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            return;
+        }
+
+        await CommentService.CreateCommentAsync(new ForumComment
+        {
+            ForumPostId = PostId,
+            AuthorId = userId,
+            Content = _newCommentText
+        });
+
+        _newCommentText = "";
+        await LoadPost();
+    }
+
+    private async Task SubmitReport()
+    {
+        if (string.IsNullOrWhiteSpace(_reportReason))
+        {
+            return;
+        }
+
+        var userId = await GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            return;
+        }
+
+        await ReportService.ReportPostAsync(PostId, userId, _reportReason);
+        _reported = true;
+        _reporting = false;
+    }
+
+    private async Task DeletePost()
+    {
+        if (_post is null)
+        {
+            return;
+        }
+
+        var categoryId = _post.ForumCategoryId;
+        await PostService.DeletePostAsync(PostId);
+        NavigationManager.NavigateTo($"category/{categoryId}");
+    }
+}

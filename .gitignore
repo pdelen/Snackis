@@ -1,0 +1,11 @@
+# ─── Build output ───
+[Bb]in/
+[Oo]bj/
+
+# ─── IDE / editor ───
+.vs/
+.idea/
+*.user
+
+# ─── Runtime user uploads (recreated by the app) ───
+Snackis.Presentation/wwwroot/uploads/

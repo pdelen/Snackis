@@ -1,0 +1,103 @@
+@page "/messages/{OtherUserId}"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using Snackis.Application.Interfaces
+@using Snackis.Domain.Entities
+@using Snackis.Infrastructure.Identity
+
+@inject IPrivateMessageService MessageService
+@inject IUserLookupService UserLookupService
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Meddelande - @_otherUser.DisplayName</PageTitle>
+
+<p><a href="messages">&laquo; Tillbaka till meddelanden</a></p>
+<h1>@_otherUser.DisplayName</h1>
+
+@if (_messages is null)
+{
+    <p>Laddar...</p>
+}
+else
+{
+    <div class="conversation-list mb-3">
+        @foreach (var message in _messages)
+        {
+            <div class="conversation-message @(message.SenderId == _currentUserId ? "conversation-message-mine" : "")">
+                <span class="text-muted small">@message.SentAt.ToDisplayString()</span>
+                <p class="mb-1">@message.Content</p>
+            </div>
+        }
+    </div>
+
+    <EditForm Model="_newMessage" OnSubmit="SendMessage" FormName="SendMessage" class="d-flex gap-2">
+        <DataAnnotationsValidator />
+        <InputText @bind-Value="_newMessage.Content" class="form-control" placeholder="Skriv ett meddelande..." />
+        <button type="submit" class="btn btn-primary">Skicka</button>
+        <ValidationSummary />
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public string OtherUserId { get; set; } = "";
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private UserSummary _otherUser = new("Okänd användare", null);
+    private List<PrivateMessage>? _messages;
+    private string? _currentUserId;
+    private NewMessageModel _newMessage = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask is null)
+        {
+            return;
+        }
+
+        var authState = await AuthStateTask;
+        _currentUserId = UserManager.GetUserId(authState.User);
+        _otherUser = await UserLookupService.GetUserSummaryAsync(OtherUserId);
+
+        await LoadConversation();
+    }
+
+    private async Task LoadConversation()
+    {
+        if (_currentUserId is null)
+        {
+            return;
+        }
+
+        _messages = await MessageService.GetConversationAsync(_currentUserId, OtherUserId);
+    }
+
+    private async Task SendMessage(EditContext editContext)
+    {
+        if (!editContext.Validate() || _currentUserId is null)
+        {
+            return;
+        }
+
+        await MessageService.SendMessageAsync(new PrivateMessage
+        {
+            SenderId = _currentUserId,
+            RecipientId = OtherUserId,
+            Content = _newMessage.Content
+        });
+
+        _newMessage = new NewMessageModel();
+        await LoadConversation();
+    }
+
+    private class NewMessageModel
+    {
+        [Required(ErrorMessage = "Meddelandet kan inte vara tomt")]
+        public string Content { get; set; } = "";
+    }
+}
