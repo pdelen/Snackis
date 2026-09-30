@@ -7,21 +7,21 @@ namespace Snackis.Infrastructure.Repositories
 {
 	public class ForumCategoryRepository : IForumCategoryRepository
 	{
-		private readonly MyDbContext _myDbContext;
+		private readonly SnackisDbContext _dbContext;
 
-		public ForumCategoryRepository(MyDbContext myDbContext)
+		public ForumCategoryRepository(SnackisDbContext dbContext)
 		{
-			_myDbContext = myDbContext;
+			_dbContext = dbContext;
 		}
 
 		public async Task<List<ForumCategory>> GetAllAsync()
 		{
-			return await _myDbContext.Categories.Include(c => c.SubCategories).Include(c => c.Posts).ToListAsync();
+			return await _dbContext.Categories.Include(c => c.SubCategories).Include(c => c.Posts).ToListAsync();
 		}
 
 		public async Task<ForumCategory> GetOneAsync(int categoryId)
 		{
-			return await _myDbContext.Categories
+			return await _dbContext.Categories
 				.Include(c => c.SubCategories)
 				.Include(c => c.Posts)
 				.Where(c => c.Id == categoryId)
@@ -30,20 +30,20 @@ namespace Snackis.Infrastructure.Repositories
 
 		public async Task CreateAsync(ForumCategory category)
 		{
-			_myDbContext.Categories.Add(category);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Categories.Add(category);
+			await _dbContext.SaveChangesAsync();
 		}
 
 		public async Task UpdateAsync(ForumCategory category)
 		{
-			_myDbContext.Update(category);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Update(category);
+			await _dbContext.SaveChangesAsync();
 		}
 
 		public async Task DeleteAsync(ForumCategory category)
 		{
-			_myDbContext.Categories.Remove(category);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Categories.Remove(category);
+			await _dbContext.SaveChangesAsync();
 		}
 	}
 }

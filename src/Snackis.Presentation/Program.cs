@@ -19,8 +19,8 @@ namespace Snackis.Presentation
 			var builder = WebApplication.CreateBuilder(args);
 
 			// Add services to the container.
-			builder.Services.AddDbContext<MyDbContext>(options =>
-				options.UseSqlServer(builder.Configuration.GetConnectionString("MyConnectionString")));
+			builder.Services.AddDbContext<SnackisDbContext>(options =>
+				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 			builder.Services.AddHttpClient("SnackisApi", client =>
 			{
@@ -50,7 +50,7 @@ namespace Snackis.Presentation
 
 			builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
 				.AddRoles<IdentityRole>()
-				.AddEntityFrameworkStores<MyDbContext>()
+				.AddEntityFrameworkStores<SnackisDbContext>()
 				.AddSignInManager()
 				.AddDefaultTokenProviders();
 

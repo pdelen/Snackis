@@ -7,16 +7,16 @@ namespace Snackis.Infrastructure.Repositories
 {
 	public class ForumCommentRepository : IForumCommentRepository
 	{
-		private readonly MyDbContext _myDbContext;
+		private readonly SnackisDbContext _dbContext;
 
-		public ForumCommentRepository(MyDbContext myDbContext)
+		public ForumCommentRepository(SnackisDbContext dbContext)
 		{
-			_myDbContext = myDbContext;
+			_dbContext = dbContext;
 		}
 
 		public async Task<List<ForumComment>> GetAllForPostAsync(int postId)
 		{
-			return await _myDbContext.Comments
+			return await _dbContext.Comments
 				.Where(c => c.ForumPostId == postId)
 				.OrderBy(c => c.CreatedAt)
 				.ToListAsync();
@@ -24,19 +24,19 @@ namespace Snackis.Infrastructure.Repositories
 
 		public async Task<ForumComment> GetOneAsync(int commentId)
 		{
-			return await _myDbContext.Comments.Where(c => c.Id == commentId).SingleOrDefaultAsync();
+			return await _dbContext.Comments.Where(c => c.Id == commentId).SingleOrDefaultAsync();
 		}
 
 		public async Task CreateAsync(ForumComment comment)
 		{
-			_myDbContext.Comments.Add(comment);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Comments.Add(comment);
+			await _dbContext.SaveChangesAsync();
 		}
 
 		public async Task DeleteAsync(ForumComment comment)
 		{
-			_myDbContext.Comments.Remove(comment);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Comments.Remove(comment);
+			await _dbContext.SaveChangesAsync();
 		}
 	}
 }

@@ -7,26 +7,26 @@ namespace Snackis.Infrastructure.Repositories
 {
 	public class ForumPostRepository : IForumPostRepository
 	{
-		private readonly MyDbContext _myDbContext;
+		private readonly SnackisDbContext _dbContext;
 
-		public ForumPostRepository(MyDbContext myDbContext)
+		public ForumPostRepository(SnackisDbContext dbContext)
 		{
-			_myDbContext = myDbContext;
+			_dbContext = dbContext;
 		}
 
 		public async Task<List<ForumPost>> GetAllAsync()
 		{
-			return await _myDbContext.Posts.Include(p => p.Category).ToListAsync();
+			return await _dbContext.Posts.Include(p => p.Category).ToListAsync();
 		}
 
 		public async Task<ForumPost> GetOneAsync(int postId)
 		{
-			return await _myDbContext.Posts.Include(p => p.Category).Where(p => p.Id == postId).SingleOrDefaultAsync();
+			return await _dbContext.Posts.Include(p => p.Category).Where(p => p.Id == postId).SingleOrDefaultAsync();
 		}
 
 		public async Task<List<ForumPost>> GetAllForCategoryAsync(int categoryId)
 		{
-			return await _myDbContext.Posts
+			return await _dbContext.Posts
 				.Where(p => p.ForumCategoryId == categoryId)
 				.OrderBy(p => p.CreatedAt)
 				.ToListAsync();
@@ -34,20 +34,20 @@ namespace Snackis.Infrastructure.Repositories
 
 		public async Task CreateAsync(ForumPost post)
 		{
-			_myDbContext.Posts.Add(post);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Posts.Add(post);
+			await _dbContext.SaveChangesAsync();
 		}
 
 		public async Task UpdateAsync(ForumPost post)
 		{
-			_myDbContext.Update(post);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Update(post);
+			await _dbContext.SaveChangesAsync();
 		}
 
 		public async Task DeleteAsync(ForumPost post)
 		{
-			_myDbContext.Posts.Remove(post);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Posts.Remove(post);
+			await _dbContext.SaveChangesAsync();
 		}
 	}
 }

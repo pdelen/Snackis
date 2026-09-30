@@ -22,8 +22,8 @@ namespace Snackis.API
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen();
 
-			builder.Services.AddDbContext<MyDbContext>(options =>
-				options.UseSqlServer(builder.Configuration.GetConnectionString("MyConnectionString")));
+			builder.Services.AddDbContext<SnackisDbContext>(options =>
+				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 			builder.Services.AddScoped<IForumPostRepository, ForumPostRepository>();
 			builder.Services.AddScoped<IForumPostService, ForumPostService>();

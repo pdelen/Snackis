@@ -11,7 +11,7 @@ using Snackis.Infrastructure.Data;
 
 namespace Snackis.Infrastructure.Migrations
 {
-    [DbContext(typeof(MyDbContext))]
+    [DbContext(typeof(SnackisDbContext))]
     [Migration("20260914173051_InitialCreate")]
     partial class InitialCreate
     {

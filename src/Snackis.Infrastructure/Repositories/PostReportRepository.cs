@@ -7,16 +7,16 @@ namespace Snackis.Infrastructure.Repositories
 {
 	public class PostReportRepository : IPostReportRepository
 	{
-		private readonly MyDbContext _myDbContext;
+		private readonly SnackisDbContext _dbContext;
 
-		public PostReportRepository(MyDbContext myDbContext)
+		public PostReportRepository(SnackisDbContext dbContext)
 		{
-			_myDbContext = myDbContext;
+			_dbContext = dbContext;
 		}
 
 		public async Task<List<PostReport>> GetOpenReportsAsync()
 		{
-			return await _myDbContext.PostReports
+			return await _dbContext.PostReports
 				.Include(r => r.Post)
 				.Where(r => !r.IsReviewed)
 				.OrderBy(r => r.CreatedAt)
@@ -25,7 +25,7 @@ namespace Snackis.Infrastructure.Repositories
 
 		public async Task<PostReport?> GetOneAsync(int reportId)
 		{
-			return await _myDbContext.PostReports
+			return await _dbContext.PostReports
 				.Include(r => r.Post)
 				.Where(r => r.Id == reportId)
 				.SingleOrDefaultAsync();
@@ -33,14 +33,14 @@ namespace Snackis.Infrastructure.Repositories
 
 		public async Task CreateAsync(PostReport report)
 		{
-			_myDbContext.PostReports.Add(report);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.PostReports.Add(report);
+			await _dbContext.SaveChangesAsync();
 		}
 
 		public async Task UpdateAsync(PostReport report)
 		{
-			_myDbContext.Update(report);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.Update(report);
+			await _dbContext.SaveChangesAsync();
 		}
 	}
 }

@@ -7,16 +7,16 @@ namespace Snackis.Infrastructure.Repositories
 {
 	public class PrivateMessageRepository : IPrivateMessageRepository
 	{
-		private readonly MyDbContext _myDbContext;
+		private readonly SnackisDbContext _dbContext;
 
-		public PrivateMessageRepository(MyDbContext myDbContext)
+		public PrivateMessageRepository(SnackisDbContext dbContext)
 		{
-			_myDbContext = myDbContext;
+			_dbContext = dbContext;
 		}
 
 		public async Task<List<PrivateMessage>> GetAllForUserAsync(string userId)
 		{
-			return await _myDbContext.PrivateMessages
+			return await _dbContext.PrivateMessages
 				.Where(m => m.SenderId == userId || m.RecipientId == userId)
 				.OrderByDescending(m => m.SentAt)
 				.ToListAsync();
@@ -24,7 +24,7 @@ namespace Snackis.Infrastructure.Repositories
 
 		public async Task<List<PrivateMessage>> GetConversationAsync(string userId, string otherUserId)
 		{
-			return await _myDbContext.PrivateMessages
+			return await _dbContext.PrivateMessages
 				.Where(m =>
 					(m.SenderId == userId && m.RecipientId == otherUserId) ||
 					(m.SenderId == otherUserId && m.RecipientId == userId))
@@ -34,8 +34,8 @@ namespace Snackis.Infrastructure.Repositories
 
 		public async Task CreateAsync(PrivateMessage message)
 		{
-			_myDbContext.PrivateMessages.Add(message);
-			await _myDbContext.SaveChangesAsync();
+			_dbContext.PrivateMessages.Add(message);
+			await _dbContext.SaveChangesAsync();
 		}
 	}
 }

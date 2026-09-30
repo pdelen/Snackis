@@ -45,7 +45,7 @@ Presentation (Blazor)   API (REST)
 |---|---|
 | `Snackis.Domain` | Entities (`ForumCategory`, `ForumPost`, `ForumComment`, `PrivateMessage`, `PostReport`) and the repository interfaces that infrastructure has to satisfy |
 | `Snackis.Application` | Services holding the rules and flows, such as a deleted report also being marked as handled. Depends only on interfaces, never on EF Core |
-| `Snackis.Infrastructure` | `MyDbContext`, repositories, migrations and the Identity customisation `ApplicationUser` |
+| `Snackis.Infrastructure` | `SnackisDbContext`, repositories, migrations and the Identity customisation `ApplicationUser` |
 | `Snackis.Presentation` | The Blazor Server interface with pages, layout and sign-in |
 | `Snackis.API` | REST API with `ForumPostsController`, which maps domain objects onto `PostDto` before returning them |
 | `Snackis.Application.Tests` | xUnit tests for the application services, run against in-memory fake repositories |
@@ -78,7 +78,7 @@ it never follows the code into git:
 
 ```bash
 dotnet user-secrets init --project src/Snackis.Presentation
-dotnet user-secrets set "ConnectionStrings:MyConnectionString" "<your connection>" --project src/Snackis.Presentation
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your connection>" --project src/Snackis.Presentation
 ```
 
 Create the database and start the web application:

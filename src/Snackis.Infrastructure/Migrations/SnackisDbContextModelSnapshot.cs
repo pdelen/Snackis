@@ -10,8 +10,8 @@ using Snackis.Infrastructure.Data;
 
 namespace Snackis.Infrastructure.Migrations
 {
-    [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(SnackisDbContext))]
+    partial class SnackisDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {

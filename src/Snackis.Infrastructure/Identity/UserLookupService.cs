@@ -8,11 +8,11 @@ namespace Snackis.Infrastructure.Identity
 	{
 		private const string UnknownUserDisplayName = "Okänd användare";
 
-		private readonly MyDbContext _myDbContext;
+		private readonly SnackisDbContext _dbContext;
 
-		public UserLookupService(MyDbContext myDbContext)
+		public UserLookupService(SnackisDbContext dbContext)
 		{
-			_myDbContext = myDbContext;
+			_dbContext = dbContext;
 		}
 
 		public async Task<UserSummary> GetUserSummaryAsync(string userId)
@@ -25,14 +25,14 @@ namespace Snackis.Infrastructure.Identity
 		{
 			var ids = userIds.Distinct().ToList();
 
-			return await _myDbContext.Users
+			return await _dbContext.Users
 				.Where(u => ids.Contains(u.Id))
 				.ToDictionaryAsync(u => u.Id, u => new UserSummary(u.DisplayName, u.ProfileImageUrl));
 		}
 
 		public async Task<string?> FindUserIdByDisplayNameAsync(string displayName)
 		{
-			return await _myDbContext.Users
+			return await _dbContext.Users
 				.Where(u => u.DisplayName == displayName)
 				.Select(u => u.Id)
 				.FirstOrDefaultAsync();

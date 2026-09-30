@@ -5,9 +5,9 @@ using Snackis.Infrastructure.Identity;
 
 namespace Snackis.Infrastructure.Data
 {
-	public class MyDbContext : IdentityDbContext<ApplicationUser>
+	public class SnackisDbContext : IdentityDbContext<ApplicationUser>
 	{
-		public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
+		public SnackisDbContext(DbContextOptions<SnackisDbContext> options) : base(options)
 		{
 		}
 
