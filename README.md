@@ -62,31 +62,21 @@ touching the pages or the controller.
 | Interface | Blazor Server with interactive components, Bootstrap |
 | API | ASP.NET Core Web API, Swagger/OpenAPI |
 | Sign-in | ASP.NET Core Identity with roles and cookie authentication |
-| Database | SQL Server through Entity Framework Core 9, code first with migrations |
+| Database | SQLite through Entity Framework Core 9, code first with migrations |
 
 ## Getting started
 
-Requires the .NET 9 SDK and a SQL Server instance.
+Requires only the .NET 9 SDK. Clone the repository and start the web application:
 
 ```bash
 git clone https://github.com/pdelen/Snackis.git
 cd Snackis
-```
-
-Put the connection string in user secrets rather than in `appsettings.json`, so
-it never follows the code into git:
-
-```bash
-dotnet user-secrets init --project src/Snackis.Presentation
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your connection>" --project src/Snackis.Presentation
-```
-
-Create the database and start the web application:
-
-```bash
-dotnet ef database update --project src/Snackis.Infrastructure --startup-project src/Snackis.Presentation
 dotnet run --project src/Snackis.Presentation
 ```
+
+The first start creates `snackis.db` in the repository root and applies the
+migrations, so there is no database to install or configure. The web application
+and the API share that file. Delete it to start over with an empty forum.
 
 Register an account in the application, create the `Admin` role under
 `/admin/roles` and assign it to your account to reach the admin pages.

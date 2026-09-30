@@ -23,13 +23,15 @@ namespace Snackis.API
 			builder.Services.AddSwaggerGen();
 
 			builder.Services.AddDbContext<SnackisDbContext>(options =>
-				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+				options.UseSnackisSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), builder.Environment.ContentRootPath));
 
 			builder.Services.AddScoped<IForumPostRepository, ForumPostRepository>();
 			builder.Services.AddScoped<IForumPostService, ForumPostService>();
 			builder.Services.AddScoped<IUserLookupService, UserLookupService>();
 
 			var app = builder.Build();
+
+			app.Services.MigrateSnackisDatabase();
 
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())

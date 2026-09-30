@@ -20,7 +20,7 @@ namespace Snackis.Presentation
 
 			// Add services to the container.
 			builder.Services.AddDbContext<SnackisDbContext>(options =>
-				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+				options.UseSnackisSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), builder.Environment.ContentRootPath));
 
 			builder.Services.AddHttpClient("SnackisApi", client =>
 			{
@@ -60,6 +60,8 @@ namespace Snackis.Presentation
 				.AddInteractiveServerComponents();
 
 			var app = builder.Build();
+
+			app.Services.MigrateSnackisDatabase();
 
 			// Configure the HTTP request pipeline.
 			if (!app.Environment.IsDevelopment())

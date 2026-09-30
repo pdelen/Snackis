@@ -9,3 +9,8 @@
 
 # ─── Runtime user uploads (recreated by the app) ───
 src/Snackis.Presentation/wwwroot/uploads/
+
+# ─── Local SQLite database (created on first run) ───
+snackis.db
+snackis.db-shm
+snackis.db-wal
