@@ -8,4 +8,4 @@
 *.user
 
 # ─── Runtime user uploads (recreated by the app) ───
-Snackis.Presentation/wwwroot/uploads/
+src/Snackis.Presentation/wwwroot/uploads/

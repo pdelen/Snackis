@@ -76,15 +76,15 @@ Put the connection string in user secrets rather than in `appsettings.json`, so
 it never follows the code into git:
 
 ```bash
-dotnet user-secrets init --project Snackis.Presentation
-dotnet user-secrets set "ConnectionStrings:MyConnectionString" "<your connection>" --project Snackis.Presentation
+dotnet user-secrets init --project src/Snackis.Presentation
+dotnet user-secrets set "ConnectionStrings:MyConnectionString" "<your connection>" --project src/Snackis.Presentation
 ```
 
 Create the database and start the web application:
 
 ```bash
-dotnet ef database update --project Snackis.Infrastructure --startup-project Snackis.Presentation
-dotnet run --project Snackis.Presentation
+dotnet ef database update --project src/Snackis.Infrastructure --startup-project src/Snackis.Presentation
+dotnet run --project src/Snackis.Presentation
 ```
 
 Register an account in the application, create the `Admin` role under
@@ -94,5 +94,5 @@ The API is started separately and answers on
 `GET /api/categories/{categoryId}/posts`:
 
 ```bash
-dotnet run --project Snackis.API
+dotnet run --project src/Snackis.API
 ```
