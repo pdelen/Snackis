@@ -1,7 +1,12 @@
 <Solution>
-  <Project Path="src/Snackis.API/Snackis.API.csproj" />
-  <Project Path="src/Snackis.Application/Snackis.Application.csproj" />
-  <Project Path="src/Snackis.Domain/Snackis.Domain.csproj" />
-  <Project Path="src/Snackis.Infrastructure/Snackis.Infrastructure.csproj" />
-  <Project Path="src/Snackis.Presentation/Snackis.Presentation.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/Snackis.API/Snackis.API.csproj" />
+    <Project Path="src/Snackis.Application/Snackis.Application.csproj" />
+    <Project Path="src/Snackis.Domain/Snackis.Domain.csproj" />
+    <Project Path="src/Snackis.Infrastructure/Snackis.Infrastructure.csproj" />
+    <Project Path="src/Snackis.Presentation/Snackis.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Snackis.Application.Tests/Snackis.Application.Tests.csproj" />
+  </Folder>
 </Solution>

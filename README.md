@@ -48,6 +48,7 @@ Presentation (Blazor)   API (REST)
 | `Snackis.Infrastructure` | `MyDbContext`, repositories, migrations and the Identity customisation `ApplicationUser` |
 | `Snackis.Presentation` | The Blazor Server interface with pages, layout and sign-in |
 | `Snackis.API` | REST API with `ForumPostsController`, which maps domain objects onto `PostDto` before returning them |
+| `Snackis.Application.Tests` | xUnit tests for the application services, run against in-memory fake repositories |
 
 Services and repositories are registered as scoped in each `Program.cs` and
 injected through the constructor, so implementations can be swapped without
@@ -95,4 +96,10 @@ The API is started separately and answers on
 
 ```bash
 dotnet run --project src/Snackis.API
+```
+
+Run the tests from the repository root:
+
+```bash
+dotnet test
 ```
