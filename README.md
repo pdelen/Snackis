@@ -78,8 +78,15 @@ The first start creates `snackis.db` in the repository root and applies the
 migrations, so there is no database to install or configure. The web application
 and the API share that file. Delete it to start over with an empty forum.
 
-Register an account in the application, create the `Admin` role under
-`/admin/roles` and assign it to your account to reach the admin pages.
+In Development the app also creates a demo admin, so the admin pages can be
+tried straight away:
+
+| Email | Password |
+|---|---|
+| `admin@snackis.local` | `Admin123!` |
+
+Signed in as admin, you can give other accounts the `Admin` role under
+`/admin/roles`. The demo admin is never created outside Development.
 
 The API is started separately and answers on
 `GET /api/categories/{categoryId}/posts`:

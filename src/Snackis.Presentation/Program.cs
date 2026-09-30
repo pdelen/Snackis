@@ -9,12 +9,13 @@ using Snackis.Infrastructure.Identity;
 using Snackis.Infrastructure.Repositories;
 using Snackis.Presentation.Components;
 using Snackis.Presentation.Components.Account;
+using Snackis.Presentation.Extensions;
 
 namespace Snackis.Presentation
 {
 	public class Program
 	{
-		public static void Main(string[] args)
+		public static async Task Main(string[] args)
 		{
 			var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,7 @@ namespace Snackis.Presentation
 			var app = builder.Build();
 
 			app.Services.MigrateSnackisDatabase();
+			await app.SeedDemoAdminAsync();
 
 			// Configure the HTTP request pipeline.
 			if (!app.Environment.IsDevelopment())
@@ -84,7 +86,7 @@ namespace Snackis.Presentation
 
 			app.MapAdditionalIdentityEndpoints();
 
-			app.Run();
+			await app.RunAsync();
 		}
 	}
 }
